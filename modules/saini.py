@@ -141,11 +141,57 @@ async def decrypt_and_merge_video(mpd_url, keys_string, output_path, output_name
     try:
         output_path = Path(output_path)
         output_path.mkdir(parents=True, exist_ok=True)
-        cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b" -o "{output_path}/file.%(ext)s" --allow-unplayable-format --no-check-certificate --concurrent-fragments 10 --external-downloader aria2c --downloader-args "aria2c:-x 16 -j 16 -s 10 -k 1M" "{mpd_url}"'
+        
+        # [FIXED] f-string mein fallback format dala hai taaki "Requested format not available" error na aaye
+        # Aur --merge-output-format mp4 add kiya hai taaki files sahi extension mein aayein
+        cmd1 = f'yt-dlp -f "bv[height<={quality}]+ba/b[height<={quality}]/bestvideo+bestaudio/best" -o "{output_path}/file.%(ext)s" --merge-output-format mp4 --allow-unplayable-format --no-check-certificate --concurrent-fragments 10 --external-downloader aria2c --downloader-args "aria2c:-x 16 -j 16 -s 10 -k 1M" "{mpd_url}"'
+        
+        print(f"Executing Download: {cmd1}")
         os.system(cmd1)
         
         avDir = list(output_path.iterdir())
         video_decrypted = audio_decrypted = False
+
+        # [FIXED] Loop checking for both encrypted parts
+        for data in avDir:
+            if data.suffix == ".mp4" and not video_decrypted:
+                # Agar file already 'video.mp4' hai toh skip, varna decrypt
+                if data.name == "video.mp4": continue
+                cmd2 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/video.mp4"'
+                os.system(cmd2)
+                if (output_path / "video.mp4").exists(): 
+                    video_decrypted = True
+                    data.unlink()
+            elif (data.suffix == ".m4a" or data.suffix == ".mp4") and not audio_decrypted and video_decrypted:
+                # Audio part handle karne ke liye
+                cmd3 = f'mp4decrypt {keys_string} --show-progress "{data}" "{output_path}/audio.m4a"'
+                os.system(cmd3)
+                if (output_path / "audio.m4a").exists(): 
+                    audio_decrypted = True
+                    data.unlink()
+
+        if not video_decrypted:
+            # Fallback agar mp4decrypt fail ho jaye
+            raise FileNotFoundError("Decryption failed. Check if mp4decrypt is installed and keys are correct.")
+
+        # Final Merging
+        final_file = output_path / f"{output_name}.mp4"
+        if audio_decrypted:
+            cmd4 = f'ffmpeg -i "{output_path}/video.mp4" -i "{output_path}/audio.m4a" -c copy "{final_file}" -y'
+        else:
+            cmd4 = f'ffmpeg -i "{output_path}/video.mp4" -c copy "{final_file}" -y'
+            
+        os.system(cmd4)
+        
+        # Cleanup temporary parts
+        for f in ["video.mp4", "audio.m4a", "file.mp4", "file.m4a"]:
+            temp_file = output_path / f
+            if temp_file.exists(): temp_file.unlink()
+        
+        return str(final_file)
+    except Exception as e:
+        print(f"Error in decrypt_and_merge: {str(e)}")
+        raise
 
         for data in avDir:
             if data.suffix == ".mp4" and not video_decrypted:
