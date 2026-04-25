@@ -427,9 +427,17 @@ async def drm_handler(bot: Client, m: Message):
 
             # --- YE NAYI LINES ADD KARO ---
             elif "cloudfront.net" in url:
-                # --remux-video mp4 use karo taaki extension hamesha fix rahe
-                cmd = f'yt-dlp -o "{name}.mp4" --remux-video mp4 --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
-                filename = f"{name}.mp4"
+                # Agar name1 khali hai toh Reasoning dalo
+                final_name = name1 if name1 else "Reasoning_Batch"
+                save_name = f"{str(count).zfill(3)}_{final_name}_GAMER"
+                
+                # Headers add kiye hain taaki 403 Forbidden na aaye
+                headers = '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --referer "https://d3vlg4qjb80h8n.cloudfront.net/"'
+                
+                cmd = f'yt-dlp {headers} -o "{save_name}.mp4" --remux-video mp4 --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
+                
+                # Path ensure karne ke liye
+                filename = f"{save_name}.mp4"
 
 
             else:
