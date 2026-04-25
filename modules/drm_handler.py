@@ -545,14 +545,11 @@ async def drm_handler(bot: Client, m: Message):
                     try:
                         video_url, keys_string = url.split("*")
                         formatted_key = f"--key {keys_string}"
-                        
-                        # YE LINE ADD KARO (Path define karne ke liye)
                         path = f"./downloads/{m.chat.id}"
                         
                         prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                         prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                         
-                        # Ab 'path' variable mil jayega aur error nahi aayega
                         res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
                         
                         await prog1.delete(True)
