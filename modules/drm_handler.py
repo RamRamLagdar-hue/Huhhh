@@ -427,26 +427,30 @@ async def drm_handler(bot: Client, m: Message):
 
             # --- YE NAYI LINES ADD KARO ---
             elif "cloudfront.net" in url and "*" in url:
-                # URL aur Chabi alag karo
-                video_url, drm_data = url.split("*")
+                # 1. URL aur Key:KID alag karo
+                video_url, keys_string = url.split("*")
                 
-                # Naming Logic fix
-                final_name = name1 if name1 else "Reasoning_Batch"
-                save_name = f"{str(count).zfill(3)}_{final_name}_GAMER"
+                # 2. Key format sahi karo (--key KID:KEY)
+                # Tera helper 'mp4decrypt' use karta hai jise ye format chahiye
+                formatted_key = f"--key {keys_string}"
                 
-                # Headers aur DRM allow flags
-                # Isme hum chabi ko yt-dlp ke bajaye decryption handler ko bhejenge
-                headers = (
-                    '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" '
-                    '--referer "https://d3vlg4qjb80h8n.cloudfront.net/" '
-                    '--no-check-certificate --allow-unplayable-formats'
-                )
-
-                # Agar --key nahi chal raha, toh humein decryption helper use karna hoga
-                # Par pehle bina aria2c ke simple command try karo
-                cmd = f'yt-dlp {headers} -o "{save_name}.mp4" --remux-video mp4 "{video_url}"'
+                # 3. Process start karo
+                prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
+                prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                 
-                filename = f"{save_name}.mp4"
+                try:
+                    # 'decrypt_and_merge_video' function saini.py mein line 118 par hai
+                    res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
+                    
+                    # 4. Success hone par video bhejo
+                    await prog1.delete(True)
+                    # send_vid function saini.py mein line 208 par hai
+                    await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
+                    count += 1
+                except Exception as e:
+                    await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
+                    count += 1
+                continue
 
 
 
