@@ -21,6 +21,16 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from base64 import b64decode
 
+# --- MP4DECRYPT AUTO-INSTALLER ---
+def install_mp4decrypt():
+    if not os.path.exists("mp4decrypt"):
+        print("陶 Installing mp4decrypt binaries...")
+        # GitHub se direct binary uthane ke liye
+        os.system("wget https://github.com/SainiSevak/bento4-buildpack/raw/master/bin/mp4decrypt -O mp4decrypt")
+        os.system("chmod +x mp4decrypt")
+
+install_mp4decrypt()
+
 # Global counter for failed attempts
 failed_counter = 0
 
