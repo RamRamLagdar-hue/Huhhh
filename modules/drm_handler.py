@@ -227,15 +227,8 @@ async def drm_handler(bot: Client, m: Message):
 
 #........................................................................................................................................................................................
     failed_count = 0
-    count = int(raw_text)    
+    count =int(raw_text)    
     arg = int(raw_text)
-    
-    # --- [NEW] Variables for Indexing (Loop ke bahar) ---
-    topic_links = {} 
-    current_sub = None
-    current_top = None
-    clean_cid = str(m.chat.id).replace("-100", "")
-
     try:
         for i in range(arg-1, len(links)):
             if globals.cancel_requested:
@@ -248,35 +241,8 @@ async def drm_handler(bot: Client, m: Message):
             url = "https://" + Vxy
             link0 = "https://" + Vxy
 #........................................................................................................................................................................................
-            
-            # --- [CLEAN & FINAL] SMART DETECTION LOGIC ---
-            raw_line = links[i][0]
-            
-            # 1. Subject Extraction
-            sub_match = re.search(r"^[\[\(]([^\]\)]+)[\]\)]", raw_line)
-            sub_name = sub_match.group(1).split(" by ")[0].strip() if sub_match else "Other"
-            
-            # 2. Topic Extraction (Handling ||, | and :)
-            top_match = re.search(r"\|\|?\s*([^:]+):?", raw_line)
-            if top_match:
-                top_raw = top_match.group(1).strip()
-                top_name = re.sub(r"(Lecture\s*\d+|Class\s*\d+|Part-\d+)", "", top_raw).strip()
-            else:
-                top_name = re.sub(r"^[\[\(].*?[\]\)]\s*|Class\s*\d+|[:\d/]", "", raw_line).strip()
-            
-            if not top_name or len(top_name) < 2: top_name = sub_name
-
-            # 3. Marker & Index Logic (DOUBLING REMOVED)
-            if topic == "/yes":
-                if sub_name != current_sub or top_name != current_top:
-                    current_sub, current_top = sub_name, top_name
-                    marker = await bot.send_message(channel_id, f"📌 **SECTION:** {current_sub}\n└─ **TOPIC:** {current_top}")
-                    if current_sub not in topic_links: topic_links[current_sub] = {}
-                    topic_links[current_sub][top_name] = f"https://t.me/c/{clean_cid}/{marker.id}"
-
-            # 4. Final Naming Logic
-            name1 = raw_line.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").strip()
-            
+             
+            name1 = links[i][0].replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
             if m.text:
                 if "youtu" in url:
                     oembed_url = f"https://www.youtube.com/oembed?url={url}&format=json"
@@ -287,60 +253,60 @@ async def drm_handler(bot: Client, m: Message):
                     namef = f'{audio_title[:60]}'
                 else:
                     name = f'{name1[:60]}'
-                    namef = f'{top_name[:60]}' 
+                    namef = f'{name1[:60]}'
             else:
-                if endfilename == "/d":
-                    name = f'{str(count).zfill(3)}) {name1[:60]}'
-                    namef = f'{top_name}'
+                if topic == "/yes":
+                    raw_title = links[i][0]
+                    t_match = re.search(r"[\(\[]([^\)\]]+)[\)\]]", raw_title)
+                    if t_match:
+                        t_name = t_match.group(1).strip()
+                        v_name = re.sub(r"^[\(\[][^\)\]]+[\)\]]\s*", "", raw_title)
+                        v_name = re.sub(r"[\(\[][^\)\]]+[\)\]]", "", v_name)
+                        v_name = re.sub(r":.*", "", v_name).strip()
+                    else:
+                        t_name = "Untitled"
+                        v_name = re.sub(r":.*", "", raw_title).strip()
+                    
+                    if endfilename == "/d":
+                        name = f'{str(count).zfill(3)}) {name1[:60]}'
+                        namef = f'{v_name}'
+                    else:
+                        name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
+                        namef = f'{v_name} {endfilename}'
                 else:
-                    name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
-                    namef = f'{top_name} {endfilename}'
+                    if endfilename == "/d":
+                        name = f'{str(count).zfill(3)}) {name1[:60]}'
+                        namef = f'{name1[:60]}'
+                    else:
+                        name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
+                        namef = f'{name1[:60]} {endfilename}'
                         
-#..............................................................#..................................................................................................................................................................................................................................................................................................................
+#........................................................................................................................................................................................
                         
             
-                                                                                                                                                # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
+                                                                        # --- DIRECT PDF DOWNLOAD LOGIC (NO HELPER NEEDED) ---
             if ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
+            # ----------------------------------------------------
 
-            elif "pdf" in url:
-                # Ankit bhai ka smart button logic for problematic links
-                if "cwmediabkt99" in url or "utkarshapp" in url:
-                    button = InlineKeyboardMarkup([
-                        [InlineKeyboardButton("📥 Download PDF (Chrome)", url=url)]
-                    ])
-                    
-                    await bot.send_message(
-                        chat_id=channel_id,
-                        text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo Download jab pdh rhe ho uske sath krna.</blockquote>",
-                        reply_markup=button
-                    )
-                    count += 1
-                    continue # Skip downloading via bot
 
-                else:
-                    # Baaki normal PDF ke liye purana logic
-                    try:
-                        cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
-                        os.system(f"{cmd} -R 25 --fragment-retries 25")
-                        if os.path.exists(f'{namef}.pdf'):
-                            await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
-                            os.remove(f'{namef}.pdf')
-                        count += 1
-                    except Exception:
-                        count += 1
-                        pass
 
-            elif "visionias" in url:
+
+
+       
+            # ------------------------------------
+
+
+                
+            # ... [Previous setup code] ...
+            if "visionias" in url:
                 async with ClientSession() as session:
-                    async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36'}) as resp:
+                    async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
                         text = await resp.text()
                         url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
 
-            elif "acecwply" in url:
+            if "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
-
-
          
             # --- NEW ADDITION ---
             elif ('classplusapp' in url or "testbook.com" in url or "classplusapp.com/drm" in url or "media-cdn.classplusapp.com/drm" in url) and '&' in url:
@@ -527,71 +493,91 @@ async def drm_handler(bot: Client, m: Message):
                     except FloodWait as e:
                         await m.reply_text(str(e))
                         time.sleep(e.x)
-                        continue
-                        
+                        continue    
   
                 elif "pdf" in url:
                     if "cwmediabkt99" in url:
-                        max_retries = 15
-                        retry_delay = 4
+                        max_retries = 15  # Define the maximum number of retries
+                        retry_delay = 4  # Delay between retries in seconds
+                        success = False  # To track whether the download was successful
+                        failure_msgs = []  # To keep track of failure messages
+                        
                         for attempt in range(max_retries):
                             try:
                                 await asyncio.sleep(retry_delay)
                                 url = url.replace(" ", "%20")
                                 scraper = cloudscraper.create_scraper()
                                 response = scraper.get(url)
+
                                 if response.status_code == 200:
                                     with open(f'{namef}.pdf', 'wb') as file:
                                         file.write(response.content)
+                                    await asyncio.sleep(retry_delay)  # Optional, to prevent spamming
                                     copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                                     count += 1
                                     os.remove(f'{namef}.pdf')
-                                    break
-                            except Exception:
+                                    success = True
+                                    break  # Exit the retry loop if successful
+                                else:
+                                    failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {response.status_code} {response.reason}")
+                                    failure_msgs.append(failure_msg)
+                                    
+                            except Exception as e:
+                                failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+                                failure_msgs.append(failure_msg)
                                 await asyncio.sleep(retry_delay)
                                 continue 
+                        for msg in failure_msgs:
+                            await msg.delete()
+                            
                     else:
                         try:
-                            cmd_pdf = f'yt-dlp -o "{namef}.pdf" "{url}"'
-                            os.system(f"{cmd_pdf} -R 25 --fragment-retries 25")
+                            cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
+                            download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                            os.system(download_cmd)
                             copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                             count += 1
-                            if os.path.exists(f'{namef}.pdf'): os.remove(f'{namef}.pdf')
-                        except Exception:
-                            count += 1
+                            os.remove(f'{namef}.pdf')
+                        except FloodWait as e:
+                            await m.reply_text(str(e))
+                            time.sleep(e.x)
                             continue    
            
                 elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
                     try:
                         ext = url.split('.')[-1]
-                        cmd_img = f'yt-dlp -o "{namef}.{ext}" "{url}"'
-                        os.system(f"{cmd_img} -R 25 --fragment-retries 25")
+                        cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
+                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                        os.system(download_cmd)
                         copy = await bot.send_photo(chat_id=channel_id, photo=f'{namef}.{ext}', caption=ccimg)
                         count += 1
-                        if os.path.exists(f'{namef}.{ext}'): os.remove(f'{namef}.{ext}')
-                    except Exception:
-                        count += 1
+                        os.remove(f'{namef}.{ext}')
+                    except FloodWait as e:
+                        await m.reply_text(str(e))
+                        time.sleep(e.x)
                         continue    
 
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
                         ext = url.split('.')[-1]
-                        cmd_aud = f'yt-dlp -o "{namef}.{ext}" "{url}"'
-                        os.system(f"{cmd_aud} -R 25 --fragment-retries 25")
+                        cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
+                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                        os.system(download_cmd)
                         copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.{ext}', caption=ccm)
                         count += 1
-                        if os.path.exists(f'{namef}.{ext}'): os.remove(f'{namef}.{ext}')
-                    except Exception:
-                        count += 1
+                        os.remove(f'{namef}.{ext}')
+                    except FloodWait as e:
+                        await m.reply_text(str(e))
+                        time.sleep(e.x)
                         continue    
                     
                 elif 'encrypted.m' in url:    
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                     prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                     res_file = await helper.download_and_decrypt_video(url, cmd, name, appxkey)  
+                    filename = res_file  
                     await prog1.delete(True)
                     await prog.delete(True)
-                    await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     await helper.send_vid(bot, m, cc, filename, vidwatermark, thumb, name, prog, channel_id)
                     count += 1  
                     await asyncio.sleep(1)  
@@ -630,31 +616,11 @@ async def drm_handler(bot: Client, m: Message):
         await m.reply_text(e)
         time.sleep(2)
 
-    # --- [FINAL SUMMARY MENU] ---
-    if topic == "/yes" and topic_links:
-        summary = f"🌟 **Batch Summary: {b_name}** 🌟\n━━━━━━━━━━━━━━━━━━━━━\n"
-        for sub, topics in topic_links.items():
-            summary += f"📚 **{sub}**\n"
-            for t_name, t_link in topics.items():
-                summary += f"   └─ [{t_name}]({t_link})\n"
-            summary += "\n"
-        summary += f"━━━━━━━━━━━━━━━━━━━━━\n✅ **Completed By {CREDIT}**"
-        await bot.send_message(channel_id, summary, disable_web_page_preview=True)
-
     success_count = len(links) - failed_count
     video_count = v2_count + mpd_count + m3u8_count + yt_count + drm_count + zip_count + other_count
-    
     if m.document:
-        completed_text = (
-            f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n"
-            f"<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n"
-            f"<blockquote>🔗 Total URLs: {len(links)} \n"
-            f"┃   ┠🔴 Total Failed URLs: {failed_count}\n"
-            f"┃   ┠🟢 Total Successful URLs: {success_count}\n"
-            f"┃   ┃   ┠🎥 Total Video URLs: {video_count}\n"
-            f"┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n"
-            f"┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n"
-        )
-        await bot.send_message(channel_id, completed_text)
-        if raw_text7 != "/d":
-            await bot.send_message(m.chat.id, f"<blockquote><b>✅ Task is completed!</b></blockquote>")
+        if raw_text7 == "/d":
+            await bot.send_message(channel_id, f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n<blockquote>🔗 Total URLs: {len(links)} \n┃   ┠🔴 Total Failed URLs: {failed_count}\n┃   ┠🟢 Total Successful URLs: {success_count}\n┃   ┃   ┠🎥 Total Video URLs: {video_count}\n┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n")
+        else:
+            await bot.send_message(channel_id, f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n<blockquote>🔗 Total URLs: {len(links)} \n┃   ┠🔴 Total Failed URLs: {failed_count}\n┃   ┠🟢 Total Successful URLs: {success_count}\n┃   ┃   ┠🎥 Total Video URLs: {video_count}\n┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n")
+            await bot.send_message(m.chat.id, f"<blockquote><b>✅ Your Task is completed, please check your Set Channel📱</b></blockquote>")
