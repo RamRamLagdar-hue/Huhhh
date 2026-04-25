@@ -281,12 +281,40 @@ async def drm_handler(bot: Client, m: Message):
                         name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
                         namef = f'{name1[:60]} {endfilename}'
                         
-#........................................................................................................................................................................................
+#..............................................................#..................................................................................................................................................................................................................................................................................................................
                         
             
-                                                                        # --- DIRECT PDF DOWNLOAD LOGIC (NO HELPER NEEDED) ---
+                                                                                                                                                # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
             if ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
+
+            elif "pdf" in url:
+                # Ankit bhai ka smart button logic for problematic links
+                if "cwmediabkt99" in url or "utkarshapp" in url:
+                    button = InlineKeyboardMarkup([
+                        [InlineKeyboardButton("📥 Download PDF (Chrome)", url=url)]
+                    ])
+                    
+                    await bot.send_message(
+                        chat_id=channel_id,
+                        text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo Download jab pdh rhe ho uske sath krna.</blockquote>",
+                        reply_markup=button
+                    )
+                    count += 1
+                    continue # Skip downloading via bot
+
+                else:
+                    # Baaki normal PDF ke liye purana logic
+                    try:
+                        cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
+                        os.system(f"{cmd} -R 25 --fragment-retries 25")
+                        if os.path.exists(f'{namef}.pdf'):
+                            await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
+                            os.remove(f'{namef}.pdf')
+                        count += 1
+                    except Exception:
+                        count += 1
+                        pass
             # ----------------------------------------------------
 
 
