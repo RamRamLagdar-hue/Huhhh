@@ -284,53 +284,44 @@ async def drm_handler(bot: Client, m: Message):
 #........................................................................................................................................................................................
                         
             
-                                                                                                                        # --- DIRECT PDF DOWNLOAD LOGIC (CURL BYPASS) ---
+                                                                                                                                    # --- DIRECT PDF DOWNLOAD LOGIC (COOKIES BYPASS) ---
             if ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
 
             elif "pdf" in url:
                 if "cwmediabkt99" in url:
-                    file_path = f"{namef}.pdf"
                     clean_url = url.replace(" ", "%20")
+                    file_path = f"{namef}.pdf"
                     
-                    # Curl command jo Chrome ki tarah act karega
-                    curl_cmd = (
-                        f'curl -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" '
-                        f'-H "Referer: https://www.careerwill.com/" '
+                    # yt-dlp ka magic: browser se cookies churana
+                    # Agar Heroku pe ho toh ye thoda mushkil hota hai, 
+                    # par local ya server pe ye command bypass kar degi
+                    yt_dlp_pdf = (
+                        f'yt-dlp --cookies-from-browser chrome '
+                        f'--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" '
+                        f'--add-header "Referer:https://www.careerwill.com/" '
                         f'-o "{file_path}" "{clean_url}"'
                     )
                     
                     try:
-                        os.system(curl_cmd)
-                        if os.path.exists(file_path) and os.path.getsize(file_path) > 1000: # Check if file exists and not empty
+                        os.system(yt_dlp_pdf)
+                        if os.path.exists(file_path) and os.path.getsize(file_path) > 1000:
                             await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
                             count += 1
                             os.remove(file_path)
                         else:
-                            await bot.send_message(m.chat.id, f"⚠️ **Failed:** Curl download nahi kar paya. Index: {count}")
-                            count += 1
+                            # Last attempt: Simple wget with fake headers
+                            os.system(f'wget --quiet --tries=3 --user-agent="Mozilla/5.0" --header="Referer: https://www.careerwill.com/" -O "{file_path}" "{clean_url}"')
+                            if os.path.exists(file_path) and os.path.getsize(file_path) > 1000:
+                                await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
+                                count += 1
+                                os.remove(file_path)
+                            else:
+                                await bot.send_message(m.chat.id, f"⚠️ **403 Persistent:** Bina proxy ke server block kar raha hai. Index: {count}")
+                                count += 1
                     except Exception as e:
                         await bot.send_message(m.chat.id, f"⚠️ **Error:** {str(e)}")
                         count += 1
-
-                else:
-                    try:
-                        cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
-                        os.system(f"{cmd} -R 25 --fragment-retries 25")
-                        await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
-                        count += 1
-                        os.remove(f'{namef}.pdf')
-                    except Exception:
-                        pass
-
-            elif "visionias" in url:
-                async with ClientSession() as session:
-                    async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36'}) as resp:
-                        text = await resp.text()
-                        url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
-
-            elif "acecwply" in url:
-                cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
 
          
             # --- NEW ADDITION ---
