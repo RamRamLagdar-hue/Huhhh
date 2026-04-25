@@ -625,15 +625,7 @@ async def drm_handler(bot: Client, m: Message):
             # --- STARTING CLEAN DOWNLOAD LOGIC ---
             try:
                 if "drive" in url:
-                    try:
-                        ka = await helper.download(url, name)
-                        copy = await bot.send_document(chat_id=channel_id, document=ka, caption=cc1)
-                        count += 1
-                        if os.path.exists(ka): os.remove(ka)
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        await asyncio.sleep(e.x)
-                        continue    
+                        
   
                 elif "pdf" in url:
                     if "cwmediabkt99" in url:
