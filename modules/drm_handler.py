@@ -518,8 +518,7 @@ async def drm_handler(bot: Client, m: Message):
                             ccm = f'<b>{str(count).zfill(3)}.</b> {name1} .mp3'
                             cchtml = f'<b>{str(count).zfill(3)}.</b> {name1} .html'
 #........................................................................................................................................................................................
-                remaining_links = len(links) - count
-                # ZeroDivision check taaki bot crash na ho
+                                remaining_links = len(links) - count
                 total_links = len(links) if len(links) > 0 else 1
                 progress = (count / total_links) * 100
                 
@@ -540,8 +539,8 @@ async def drm_handler(bot: Client, m: Message):
                         f"🛑**Send** /stop **to stop process**\n┃\n" \
                         f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
 
-                # --- [NEW] CLOUDFRONT DRM BYPASS BLOCK ---
-                 if "cloudfront.net" in url and "*" in url:
+                # --- [FIXED ALIGNMENT] CLOUDFRONT DRM BYPASS BLOCK ---
+                if "cloudfront.net" in url and "*" in url:
                     try:
                         video_url, keys_string = url.split("*")
                         formatted_key = f"--key {keys_string}"
@@ -550,10 +549,12 @@ async def drm_handler(bot: Client, m: Message):
                         prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                         prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                         
+                        # Calling helper from saini.py
                         res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
                         
                         await prog1.delete(True)
                         await prog.delete(True)
+                        # Sending video using helper
                         await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                         count += 1
                         continue 
@@ -561,6 +562,7 @@ async def drm_handler(bot: Client, m: Message):
                         await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
                         count += 1
                         continue
+
 
 #........................................................................................................................................................................................           
                 if "drive" in url:
