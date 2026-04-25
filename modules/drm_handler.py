@@ -519,7 +519,10 @@ async def drm_handler(bot: Client, m: Message):
                             cchtml = f'<b>{str(count).zfill(3)}.</b> {name1} .html'
 #........................................................................................................................................................................................
                 remaining_links = len(links) - count
-                progress = (count / len(links)) * 100
+                # ZeroDivision check taaki bot crash na ho
+                total_links = len(links) if len(links) > 0 else 1
+                progress = (count / total_links) * 100
+                
                 Show = f"<i><b>Video Downloading</b></i>\n<blockquote><b>{str(count).zfill(3)}) {name1}</b></blockquote>" 
                 Show1 = f"<blockquote>🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%</blockquote>\n┃\n" \
                         f"┣🔗𝐈𝐧𝐝𝐞𝐱 » {count}/{len(links)}\n┃\n" \
@@ -536,6 +539,30 @@ async def drm_handler(bot: Client, m: Message):
                         f"━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                         f"🛑**Send** /stop **to stop process**\n┃\n" \
                         f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
+
+                # --- [NEW] CLOUDFRONT DRM BYPASS BLOCK ---
+                if "cloudfront.net" in url and "*" in url:
+                    try:
+                        video_url, keys_string = url.split("*")
+                        # Saini.py helper ke liye key format: --key KID:KEY
+                        formatted_key = f"--key {keys_string}"
+                        
+                        prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
+                        prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
+                        
+                        # saini.py ka decrypt_and_merge_video function call ho raha hai
+                        res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
+                        
+                        await prog1.delete(True)
+                        await prog.delete(True)
+                        # Video bhejne ke liye saini.py ka function
+                        await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
+                        count += 1
+                        continue # Iske niche wale normal download logic ko skip karega
+                    except Exception as e:
+                        await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
+                        count += 1
+                        continue
 #........................................................................................................................................................................................           
                 if "drive" in url:
                     try:
