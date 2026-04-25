@@ -426,38 +426,38 @@ async def drm_handler(bot: Client, m: Message):
 
 
             # --- YE NAYI LINES ADD KARO ---
-            elif "cloudfront.net" in url and "*" in url:
+            #elif "cloudfront.net" in url and "*" in url:
                 # 1. URL aur Key:KID alag karo
-                video_url, keys_string = url.split("*")
+                #video_url, keys_string = url.split("*")
                 
                 # 2. Key format sahi karo (--key KID:KEY)
                 # Tera helper 'mp4decrypt' use karta hai jise ye format chahiye
-                formatted_key = f"--key {keys_string}"
+               # formatted_key = f"--key {keys_string}"
                 
                 # 3. Process start karo
-                prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
-                prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
+              #  prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
+             #   prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                 
-                try:
+               # try:
                     # 'decrypt_and_merge_video' function saini.py mein line 118 par hai
-                    res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
+                #    res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
                     
                     # 4. Success hone par video bhejo
-                    await prog1.delete(True)
+               #     await prog1.delete(True)
                     # send_vid function saini.py mein line 208 par hai
-                    await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
+               #     await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     count += 1
-                except Exception as e:
-                    await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
-                    count += 1
-                continue
+             #   except Exception as e:
+           #         await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
+          #          count += 1
+        #        continue
 
 
 
 
-            else:
+           # else:
                 # Default fallback agar upar ki koi condition match na ho
-                cmd = f'yt-dlp -o "{name}.mp4" --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
+              #  cmd = f'yt-dlp -o "{name}.mp4" --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
 
 
 
