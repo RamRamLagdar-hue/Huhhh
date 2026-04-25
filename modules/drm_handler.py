@@ -603,7 +603,7 @@ async def drm_handler(bot: Client, m: Message):
                     res_file = await helper.decrypt_and_merge_video(mpd, keys_string, path, name, raw_text2)
                     await prog1.delete(True)
 #........................................................................................................................................................................................
-                                remaining_links = len(links) - count
+                remaining_links = len(links) - count
                 progress = (count / len(links)) * 100
                 Show = f"<i><b>Video Downloading</b></i>\n<blockquote><b>{str(count).zfill(3)}) {name1}</b></blockquote>" 
                 Show1 = f"<blockquote>🚀𝐏𝐫𝐨𝐠𝐫𝐞𝐬𝐬 » {progress:.2f}%</blockquote>\n┃\n" \
@@ -621,10 +621,17 @@ async def drm_handler(bot: Client, m: Message):
                         f"━━━━━━━━━━━━━━━━━━━━━━━━━\n" \
                         f"🛑**Send** /stop **to stop process**\n┃\n" \
                         f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
-    
-            # --- STARTING CLEAN DOWNLOAD LOGIC ---
-            try:
+#........................................................................................................................................................................................           
                 if "drive" in url:
+                    try:
+                        ka = await helper.download(url, name)
+                        copy = await bot.send_document(chat_id=channel_id,document=ka, caption=cc1)
+                        count+=1
+                        os.remove(ka)
+                    except FloodWait as e:
+                        await m.reply_text(str(e))
+                        time.sleep(e.x)
+                        continue
                         
   
                 elif "pdf" in url:
