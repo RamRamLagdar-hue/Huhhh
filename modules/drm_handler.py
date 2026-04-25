@@ -284,46 +284,35 @@ async def drm_handler(bot: Client, m: Message):
 #........................................................................................................................................................................................
                         
             
-                                                                                                            # --- DIRECT PDF DOWNLOAD LOGIC (WITH FULL CHROME HEADERS) ---
+                                                                                                                        # --- DIRECT PDF DOWNLOAD LOGIC (CURL BYPASS) ---
             if ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
 
             elif "pdf" in url:
                 if "cwmediabkt99" in url:
-                    max_retries = 3 
-                    retry_delay = 2 
-                    # Exact Chrome sequence to bypass 403 Forbidden
-                    headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                        "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
-                        "Accept-Encoding": "gzip, deflate, br",
-                        "Connection": "keep-alive",
-                        "Upgrade-Insecure-Requests": "1",
-                        "Referer": "https://www.careerwill.com/",
-                        "Sec-Fetch-Dest": "document",
-                        "Sec-Fetch-Mode": "navigate",
-                        "Sec-Fetch-Site": "cross-site",
-                        "Sec-Fetch-User": "?1"
-                    }
-                    for attempt in range(max_retries):
-                        try:
-                            clean_url = url.replace(" ", "%20")
-                            scraper = cloudscraper.create_scraper()
-                            response = scraper.get(clean_url, headers=headers, timeout=60)
-                            if response.status_code == 200:
-                                file_path = f"{namef}.pdf"
-                                with open(file_path, 'wb') as file:
-                                    file.write(response.content)
-                                await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
-                                count += 1
-                                os.remove(file_path)
-                                break 
-                            else:
-                                await asyncio.sleep(retry_delay)
-                        except Exception:
-                            await asyncio.sleep(retry_delay)
-                            continue
+                    file_path = f"{namef}.pdf"
+                    clean_url = url.replace(" ", "%20")
+                    
+                    # Curl command jo Chrome ki tarah act karega
+                    curl_cmd = (
+                        f'curl -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" '
+                        f'-H "Referer: https://www.careerwill.com/" '
+                        f'-o "{file_path}" "{clean_url}"'
+                    )
+                    
+                    try:
+                        os.system(curl_cmd)
+                        if os.path.exists(file_path) and os.path.getsize(file_path) > 1000: # Check if file exists and not empty
+                            await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
+                            count += 1
+                            os.remove(file_path)
+                        else:
+                            await bot.send_message(m.chat.id, f"⚠️ **Failed:** Curl download nahi kar paya. Index: {count}")
+                            count += 1
+                    except Exception as e:
+                        await bot.send_message(m.chat.id, f"⚠️ **Error:** {str(e)}")
+                        count += 1
+
                 else:
                     try:
                         cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
