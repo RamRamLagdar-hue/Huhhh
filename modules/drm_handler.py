@@ -607,6 +607,95 @@ async def drm_handler(bot: Client, m: Message):
                         continue    
                     
                 elif 'encrypted.m' in url:    
+#........................................................................................................................................................................................           
+                if "drive" in url:
+                    try:
+                        ka = await helper.download(url, name)
+                        copy = await bot.send_document(chat_id=channel_id,document=ka, caption=cc1)
+                        count+=1
+                        os.remove(ka)
+                    except FloodWait as e:
+                        await m.reply_text(str(e))
+                        time.sleep(e.x)
+                        continue    
+  
+                elif "pdf" in url:
+                    if "cwmediabkt99" in url:
+                        max_retries = 15  # Define the maximum number of retries
+                        retry_delay = 4  # Delay between retries in seconds
+                        success = False  # To track whether the download was successful
+                        failure_msgs = []  # To keep track of failure messages
+                        
+                        for attempt in range(max_retries):
+                            try:
+                                await asyncio.sleep(retry_delay)
+                                url = url.replace(" ", "%20")
+                                scraper = cloudscraper.create_scraper()
+                                response = scraper.get(url)
+
+                                if response.status_code == 200:
+                                    with open(f'{namef}.pdf', 'wb') as file:
+                                        file.write(response.content)
+                                    await asyncio.sleep(retry_delay)  # Optional, to prevent spamming
+                                    copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
+                                    count += 1
+                                    os.remove(f'{namef}.pdf')
+                                    success = True
+                                    break  # Exit the retry loop if successful
+                                else:
+                                    failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {response.status_code} {response.reason}")
+                                    failure_msgs.append(failure_msg)
+                                    
+                            except Exception as e:
+                                failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+                                failure_msgs.append(failure_msg)
+                                await asyncio.sleep(retry_delay)
+                                continue 
+                        for msg in failure_msgs:
+                            await msg.delete()
+                            
+                    else:
+                        try:
+                            cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
+                            download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                            os.system(download_cmd)
+                            copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
+                            count += 1
+                            os.remove(f'{namef}.pdf')
+                        except FloodWait as e:
+                            await m.reply_text(str(e))
+                            time.sleep(e.x)
+                            continue    
+           
+                elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
+                    try:
+                        ext = url.split('.')[-1]
+                        cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
+                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                        os.system(download_cmd)
+                        copy = await bot.send_photo(chat_id=channel_id, photo=f'{namef}.{ext}', caption=ccimg)
+                        count += 1
+                        os.remove(f'{namef}.{ext}')
+                    except FloodWait as e:
+                        await m.reply_text(str(e))
+                        time.sleep(e.x)
+                        continue    
+
+                elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
+                    try:
+                        ext = url.split('.')[-1]
+                        cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
+                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
+                        os.system(download_cmd)
+                        copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.{ext}', caption=ccm)
+                        count += 1
+                        os.remove(f'{namef}.{ext}')
+                    except FloodWait as e:
+                        await m.reply_text(str(e))
+                        time.sleep(e.x)
+                        continue    
+                    
+                elif 'encrypted.m' in url:    
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                     prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                     res_file = await helper.download_and_decrypt_video(url, cmd, name, appxkey)  
@@ -651,11 +740,33 @@ async def drm_handler(bot: Client, m: Message):
         await m.reply_text(e)
         time.sleep(2)
 
+    # --- [INDEX SUMMARY ADDED HERE] ---
+    if topic == "/yes":
+        summary = f"🌟 **Batch Summary: {b_name}** 🌟\n"
+        summary += f"━━━━━━━━━━━━━━━━━━━━━\n"
+        summary += f"🔢 **Index Range:** {arg} ➡️ {len(links)}\n"
+        summary += f"━━━━━━━━━━━━━━━━━━━━━\n"
+        summary += f"📚 **Subject-wise Navigation**\n\n"
+        for sub, topics in topic_links.items():
+            summary += f"🔹 **{sub}**\n"
+            for t_name, t_link in topics.items():
+                summary += f"   └─ [{t_name}]({t_link})\n"
+        summary += f"\n━━━━━━━━━━━━━━━━━━━━━\n"
+        await bot.send_message(channel_id, summary, disable_web_page_preview=True)
+
     success_count = len(links) - failed_count
     video_count = v2_count + mpd_count + m3u8_count + yt_count + drm_count + zip_count + other_count
     if m.document:
-        if raw_text7 == "/d":
-            await bot.send_message(channel_id, f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n<blockquote>🔗 Total URLs: {len(links)} \n┃   ┠🔴 Total Failed URLs: {failed_count}\n┃   ┠🟢 Total Successful URLs: {success_count}\n┃   ┃   ┠🎥 Total Video URLs: {video_count}\n┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n")
-        else:
-            await bot.send_message(channel_id, f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n<blockquote>🔗 Total URLs: {len(links)} \n┃   ┠🔴 Total Failed URLs: {failed_count}\n┃   ┠🟢 Total Successful URLs: {success_count}\n┃   ┃   ┠🎥 Total Video URLs: {video_count}\n┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n")
+        completed_text = (
+            f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n"
+            f"<blockquote><b>🎯Batch Name : {b_name}</b></blockquote>\n"
+            f"<blockquote>🔗 Total URLs: {len(links)} \n"
+            f"┃   ┠🔴 Total Failed URLs: {failed_count}\n"
+            f"┃   ┠🟢 Total Successful URLs: {success_count}\n"
+            f"┃   ┃   ┠🎥 Total Video URLs: {video_count}\n"
+            f"┃   ┃   ┠📄 Total PDF URLs: {pdf_count}\n"
+            f"┃   ┃   ┠📸 Total IMAGE URLs: {img_count}</blockquote>\n"
+        )
+        await bot.send_message(channel_id, completed_text)
+        if raw_text7 != "/d":
             await bot.send_message(m.chat.id, f"<blockquote><b>✅ Your Task is completed, please check your Set Channel📱</b></blockquote>")
