@@ -543,7 +543,11 @@ async def drm_handler(bot: Client, m: Message):
                 if "cloudfront.net" in url and "*" in url:
                     try:
                         video_url, keys_string = url.split("*")
+                        
+                        # Agar key:kid ka format sahi nahi hai toh decryption fail hogi
+                        # Saini.py helper ko KID:KEY format chahiye
                         formatted_key = f"--key {keys_string}"
+                        
                         path = f"./downloads/{m.chat.id}"
                         
                         prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
