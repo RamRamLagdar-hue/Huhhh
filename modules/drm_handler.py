@@ -608,154 +608,127 @@ async def drm_handler(bot: Client, m: Message):
                     
                 elif 'encrypted.m' in url:    
 #........................................................................................................................................................................................           
+#........................................................................................................................................................................................           
+            # --- STARTING CLEAN DOWNLOAD LOGIC ---
+            try:
                 if "drive" in url:
                     try:
                         ka = await helper.download(url, name)
-                        copy = await bot.send_document(chat_id=channel_id,document=ka, caption=cc1)
-                        count+=1
+                        copy = await bot.send_document(chat_id=channel_id, document=ka, caption=cc1)
+                        count += 1
                         os.remove(ka)
                     except FloodWait as e:
                         await m.reply_text(str(e))
-                        time.sleep(e.x)
+                        await asyncio.sleep(e.x)
                         continue    
   
                 elif "pdf" in url:
                     if "cwmediabkt99" in url:
-                        max_retries = 15  # Define the maximum number of retries
-                        retry_delay = 4  # Delay between retries in seconds
-                        success = False  # To track whether the download was successful
-                        failure_msgs = []  # To keep track of failure messages
-                        
+                        max_retries = 15
+                        retry_delay = 4
                         for attempt in range(max_retries):
                             try:
                                 await asyncio.sleep(retry_delay)
                                 url = url.replace(" ", "%20")
                                 scraper = cloudscraper.create_scraper()
                                 response = scraper.get(url)
-
                                 if response.status_code == 200:
                                     with open(f'{namef}.pdf', 'wb') as file:
                                         file.write(response.content)
-                                    await asyncio.sleep(retry_delay)  # Optional, to prevent spamming
                                     copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                                     count += 1
                                     os.remove(f'{namef}.pdf')
-                                    success = True
-                                    break  # Exit the retry loop if successful
-                                else:
-                                    failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {response.status_code} {response.reason}")
-                                    failure_msgs.append(failure_msg)
-                                    
-                            except Exception as e:
-                                failure_msg = await m.reply_text(f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}")
-                                failure_msgs.append(failure_msg)
+                                    break
+                            except Exception:
                                 await asyncio.sleep(retry_delay)
                                 continue 
-                        for msg in failure_msgs:
-                            await msg.delete()
-                            
                     else:
                         try:
                             cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
-                            download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                            os.system(download_cmd)
+                            os.system(f"{cmd} -R 25 --fragment-retries 25")
                             copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                             count += 1
-                            os.remove(f'{namef}.pdf')
-                        except FloodWait as e:
-                            await m.reply_text(str(e))
-                            time.sleep(e.x)
+                            if os.path.exists(f'{namef}.pdf'): os.remove(f'{namef}.pdf')
+                        except Exception:
+                            count += 1
                             continue    
            
                 elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
                     try:
                         ext = url.split('.')[-1]
                         cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
+                        os.system(f"{cmd} -R 25 --fragment-retries 25")
                         copy = await bot.send_photo(chat_id=channel_id, photo=f'{namef}.{ext}', caption=ccimg)
                         count += 1
                         os.remove(f'{namef}.{ext}')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
+                    except Exception:
+                        count += 1
                         continue    
 
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
                         ext = url.split('.')[-1]
                         cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
-                        download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-                        os.system(download_cmd)
+                        os.system(f"{cmd} -R 25 --fragment-retries 25")
                         copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.{ext}', caption=ccm)
                         count += 1
                         os.remove(f'{namef}.{ext}')
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
+                    except Exception:
+                        count += 1
                         continue    
                     
                 elif 'encrypted.m' in url:    
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                     prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                     res_file = await helper.download_and_decrypt_video(url, cmd, name, appxkey)  
-                    filename = res_file  
                     await prog1.delete(True)
                     await prog.delete(True)
-                    await helper.send_vid(bot, m, cc, filename, vidwatermark, thumb, name, prog, channel_id)
+                    await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     count += 1  
-                    await asyncio.sleep(1)  
                     continue  
 
                 elif 'drmcdni' in url or 'drm/wv' in url or 'drm/common' in url:
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                     prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                     res_file = await helper.decrypt_and_merge_video(mpd, keys_string, path, name, raw_text2)
-                    filename = res_file
                     await prog1.delete(True)
                     await prog.delete(True)
-                    await helper.send_vid(bot, m, cc, filename, vidwatermark, thumb, name, prog, channel_id)
+                    await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     count += 1
-                    await asyncio.sleep(1)
                     continue
      
                 else:
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                     prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                     res_file = await helper.download_video(url, cmd, name)
-                    filename = res_file
                     await prog1.delete(True)
                     await prog.delete(True)
-                    await helper.send_vid(bot, m, cc, filename, vidwatermark, thumb, name, prog, channel_id)
+                    await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     count += 1
-                    time.sleep(1)
                 
             except Exception as e:
-                await bot.send_message(channel_id, f'⚠️**Downloading Failed**⚠️\n**Name** =>> `{str(count).zfill(3)} {name1}`\n**Url** =>> {url}\n\n<blockquote expandable><i><b>Failed Reason: {str(e)}</b></i></blockquote>', disable_web_page_preview=True)
+                await bot.send_message(channel_id, f'⚠️**Downloading Failed**⚠️\n**Name** =>> `{str(count).zfill(3)} {name1}`\n**Url** =>> {url}\n\n<i>Failed Reason: {str(e)}</i>', disable_web_page_preview=True)
                 count += 1
                 failed_count += 1
                 continue
 
     except Exception as e:
-        await m.reply_text(e)
-        time.sleep(2)
+        await m.reply_text(f"Error: {e}")
 
-    # --- [INDEX SUMMARY ADDED HERE] ---
-    if topic == "/yes":
-        summary = f"🌟 **Batch Summary: {b_name}** 🌟\n"
-        summary += f"━━━━━━━━━━━━━━━━━━━━━\n"
-        summary += f"🔢 **Index Range:** {arg} ➡️ {len(links)}\n"
-        summary += f"━━━━━━━━━━━━━━━━━━━━━\n"
-        summary += f"📚 **Subject-wise Navigation**\n\n"
+    # --- [FINAL SUMMARY MENU] ---
+    if topic == "/yes" and topic_links:
+        summary = f"🌟 **Batch Summary: {b_name}** 🌟\n━━━━━━━━━━━━━━━━━━━━━\n"
         for sub, topics in topic_links.items():
-            summary += f"🔹 **{sub}**\n"
+            summary += f"📚 **{sub}**\n"
             for t_name, t_link in topics.items():
                 summary += f"   └─ [{t_name}]({t_link})\n"
-        summary += f"\n━━━━━━━━━━━━━━━━━━━━━\n"
+            summary += "\n"
+        summary += f"━━━━━━━━━━━━━━━━━━━━━\n✅ **Completed By {CREDIT}**"
         await bot.send_message(channel_id, summary, disable_web_page_preview=True)
 
     success_count = len(links) - failed_count
     video_count = v2_count + mpd_count + m3u8_count + yt_count + drm_count + zip_count + other_count
+    
     if m.document:
         completed_text = (
             f"<b>-┈━═.•°✅ Completed ✅°•.═━┈-</b>\n"
@@ -769,4 +742,4 @@ async def drm_handler(bot: Client, m: Message):
         )
         await bot.send_message(channel_id, completed_text)
         if raw_text7 != "/d":
-            await bot.send_message(m.chat.id, f"<blockquote><b>✅ Your Task is completed, please check your Set Channel📱</b></blockquote>")
+            await bot.send_message(m.chat.id, f"<blockquote><b>✅ Task is completed!</b></blockquote>")
