@@ -427,26 +427,27 @@ async def drm_handler(bot: Client, m: Message):
 
             # --- YE NAYI LINES ADD KARO ---
             elif "cloudfront.net" in url and "*" in url:
-                # 1. URL aur Key/KID ko alag karna
-                try:
-                    video_url, drm_data = url.split("*")
-                    key_kid = drm_data.strip() # Ye tumhari key:kid hai
-                    
-                    # 2. Naming logic (empty name fix)
-                    final_name = name1 if name1 else "DRM_Video"
-                    save_name = f"{str(count).zfill(3)}_{final_name}_GAMER"
-                    
-                    # 3. DRM Decryption ke liye command
-                    # Isme --key pass karna zaroori hai taaki 403 error na aaye
-                    headers = '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" --referer "https://d3vlg4qjb80h8n.cloudfront.net/"'
-                    
-                    # Command mein --key logic add kiya hai
-                    cmd = f'yt-dlp {headers} --allow-unplayable-formats --key "{key_kid}" -o "{save_name}.mp4" --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{video_url}"'
-                    
-                    filename = f"{save_name}.mp4"
-                except Exception as e:
-                    await bot.send_message(channel_id, f"❌ DRM Split Error: {e}")
-                    continue
+                # URL aur Chabi alag karo
+                video_url, drm_data = url.split("*")
+                
+                # Naming Logic fix
+                final_name = name1 if name1 else "Reasoning_Batch"
+                save_name = f"{str(count).zfill(3)}_{final_name}_GAMER"
+                
+                # Headers aur DRM allow flags
+                # Isme hum chabi ko yt-dlp ke bajaye decryption handler ko bhejenge
+                headers = (
+                    '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" '
+                    '--referer "https://d3vlg4qjb80h8n.cloudfront.net/" '
+                    '--no-check-certificate --allow-unplayable-formats'
+                )
+
+                # Agar --key nahi chal raha, toh humein decryption helper use karna hoga
+                # Par pehle bina aria2c ke simple command try karo
+                cmd = f'yt-dlp {headers} -o "{save_name}.mp4" --remux-video mp4 "{video_url}"'
+                
+                filename = f"{save_name}.mp4"
+
 
 
 
