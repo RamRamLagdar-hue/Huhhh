@@ -527,7 +527,7 @@ async def drm_handler(bot: Client, m: Message):
                         ka = await helper.download(url, name)
                         copy = await bot.send_document(chat_id=channel_id, document=ka, caption=cc1)
                         count += 1
-                        os.remove(ka)
+                        if os.path.exists(ka): os.remove(ka)
                     except FloodWait as e:
                         await m.reply_text(str(e))
                         await asyncio.sleep(e.x)
@@ -555,8 +555,8 @@ async def drm_handler(bot: Client, m: Message):
                                 continue 
                     else:
                         try:
-                            cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
-                            os.system(f"{cmd} -R 25 --fragment-retries 25")
+                            cmd_pdf = f'yt-dlp -o "{namef}.pdf" "{url}"'
+                            os.system(f"{cmd_pdf} -R 25 --fragment-retries 25")
                             copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                             count += 1
                             if os.path.exists(f'{namef}.pdf'): os.remove(f'{namef}.pdf')
@@ -567,11 +567,11 @@ async def drm_handler(bot: Client, m: Message):
                 elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
                     try:
                         ext = url.split('.')[-1]
-                        cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
-                        os.system(f"{cmd} -R 25 --fragment-retries 25")
+                        cmd_img = f'yt-dlp -o "{namef}.{ext}" "{url}"'
+                        os.system(f"{cmd_img} -R 25 --fragment-retries 25")
                         copy = await bot.send_photo(chat_id=channel_id, photo=f'{namef}.{ext}', caption=ccimg)
                         count += 1
-                        os.remove(f'{namef}.{ext}')
+                        if os.path.exists(f'{namef}.{ext}'): os.remove(f'{namef}.{ext}')
                     except Exception:
                         count += 1
                         continue    
@@ -579,11 +579,11 @@ async def drm_handler(bot: Client, m: Message):
                 elif any(ext in url for ext in [".mp3", ".wav", ".m4a"]):
                     try:
                         ext = url.split('.')[-1]
-                        cmd = f'yt-dlp -o "{namef}.{ext}" "{url}"'
-                        os.system(f"{cmd} -R 25 --fragment-retries 25")
+                        cmd_aud = f'yt-dlp -o "{namef}.{ext}" "{url}"'
+                        os.system(f"{cmd_aud} -R 25 --fragment-retries 25")
                         copy = await bot.send_document(chat_id=channel_id, document=f'{namef}.{ext}', caption=ccm)
                         count += 1
-                        os.remove(f'{namef}.{ext}')
+                        if os.path.exists(f'{namef}.{ext}'): os.remove(f'{namef}.{ext}')
                     except Exception:
                         count += 1
                         continue    
@@ -596,7 +596,6 @@ async def drm_handler(bot: Client, m: Message):
                     await prog.delete(True)
                     await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     count += 1  
-                    continue  
 
                 elif 'drmcdni' in url or 'drm/wv' in url or 'drm/common' in url:
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
@@ -606,7 +605,6 @@ async def drm_handler(bot: Client, m: Message):
                     await prog.delete(True)
                     await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                     count += 1
-                    continue
      
                 else:
                     prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
@@ -624,7 +622,7 @@ async def drm_handler(bot: Client, m: Message):
                 continue
 
     except Exception as e:
-        await m.reply_text(f"Error: {e}")
+        await m.reply_text(f"Error in Loop: {e}")
 
     # --- [FINAL SUMMARY MENU] ---
     if topic == "/yes" and topic_links:
