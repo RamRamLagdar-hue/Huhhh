@@ -284,25 +284,33 @@ async def drm_handler(bot: Client, m: Message):
 #........................................................................................................................................................................................
                         
             
-                                                                                                # --- DIRECT PDF DOWNLOAD LOGIC ---
+                                                                                                            # --- DIRECT PDF DOWNLOAD LOGIC (WITH FULL CHROME HEADERS) ---
             if ".pdf*" in url:
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
 
             elif "pdf" in url:
                 if "cwmediabkt99" in url:
-                    max_retries = 5 
-                    retry_delay = 3 
-                    success = False 
+                    max_retries = 3 
+                    retry_delay = 2 
+                    # Exact Chrome sequence to bypass 403 Forbidden
                     headers = {
-                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                        "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+                        "Accept-Encoding": "gzip, deflate, br",
+                        "Connection": "keep-alive",
+                        "Upgrade-Insecure-Requests": "1",
                         "Referer": "https://www.careerwill.com/",
-                        "Origin": "https://www.careerwill.com/",
-                        "Accept": "*/*"
+                        "Sec-Fetch-Dest": "document",
+                        "Sec-Fetch-Mode": "navigate",
+                        "Sec-Fetch-Site": "cross-site",
+                        "Sec-Fetch-User": "?1"
                     }
                     for attempt in range(max_retries):
                         try:
-                            url = url.replace(" ", "%20")
-                            response = requests.get(url, headers=headers, timeout=30)
+                            clean_url = url.replace(" ", "%20")
+                            scraper = cloudscraper.create_scraper()
+                            response = scraper.get(clean_url, headers=headers, timeout=60)
                             if response.status_code == 200:
                                 file_path = f"{namef}.pdf"
                                 with open(file_path, 'wb') as file:
@@ -310,17 +318,25 @@ async def drm_handler(bot: Client, m: Message):
                                 await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
                                 count += 1
                                 os.remove(file_path)
-                                success = True
                                 break 
                             else:
                                 await asyncio.sleep(retry_delay)
                         except Exception:
                             await asyncio.sleep(retry_delay)
                             continue
+                else:
+                    try:
+                        cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
+                        os.system(f"{cmd} -R 25 --fragment-retries 25")
+                        await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
+                        count += 1
+                        os.remove(f'{namef}.pdf')
+                    except Exception:
+                        pass
 
             elif "visionias" in url:
                 async with ClientSession() as session:
-                    async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
+                    async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36'}) as resp:
                         text = await resp.text()
                         url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
 
