@@ -518,7 +518,7 @@ async def drm_handler(bot: Client, m: Message):
                             ccm = f'<b>{str(count).zfill(3)}.</b> {name1} .mp3'
                             cchtml = f'<b>{str(count).zfill(3)}.</b> {name1} .html'
 #........................................................................................................................................................................................
-                                remaining_links = len(links) - count
+                remaining_links = len(links) - count
                 total_links = len(links) if len(links) > 0 else 1
                 progress = (count / total_links) * 100
                 
