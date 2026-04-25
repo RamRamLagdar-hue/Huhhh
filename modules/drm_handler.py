@@ -297,7 +297,7 @@ async def drm_handler(bot: Client, m: Message):
                     
                     await bot.send_message(
                         chat_id=channel_id,
-                        text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>Ankit bhai, yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo.</blockquote>",
+                        text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo Download jab pdh rhe ho uske sath krna.</blockquote>",
                         reply_markup=button
                     )
                     count += 1
