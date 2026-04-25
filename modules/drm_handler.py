@@ -249,14 +249,14 @@ async def drm_handler(bot: Client, m: Message):
             link0 = "https://" + Vxy
 #........................................................................................................................................................................................
             
-            # --- [NEW] SMART DETECTION LOGIC START ---
+            # --- [CLEAN & FINAL] SMART DETECTION LOGIC ---
             raw_line = links[i][0]
             
-            # [span_2](start_span)Subject Nikalna (Khan Sir/English/Reasoning patterns)[span_2](end_span)
+            # 1. Subject Extraction
             sub_match = re.search(r"^[\[\(]([^\]\)]+)[\]\)]", raw_line)
             sub_name = sub_match.group(1).split(" by ")[0].strip() if sub_match else "Other"
             
-            # [span_3](start_span)Topic Detection (||, | or : patterns)[span_3](end_span)
+            # 2. Topic Extraction (Handling ||, | and :)
             top_match = re.search(r"\|\|?\s*([^:]+):?", raw_line)
             if top_match:
                 top_raw = top_match.group(1).strip()
@@ -266,17 +266,16 @@ async def drm_handler(bot: Client, m: Message):
             
             if not top_name or len(top_name) < 2: top_name = sub_name
 
-            # [span_4](start_span)Marker Link & Section Divider[span_4](end_span)
+            # 3. Marker & Index Logic (DOUBLING REMOVED)
             if topic == "/yes":
                 if sub_name != current_sub or top_name != current_top:
                     current_sub, current_top = sub_name, top_name
                     marker = await bot.send_message(channel_id, f"📌 **SECTION:** {current_sub}\n└─ **TOPIC:** {current_top}")
                     if current_sub not in topic_links: topic_links[current_sub] = {}
                     topic_links[current_sub][top_name] = f"https://t.me/c/{clean_cid}/{marker.id}"
-            # --- [NEW] SMART DETECTION LOGIC END ---
 
-            # -[span_5](start_span)-- PURANA NAME LOGIC (ALIGNED) ---[span_5](end_span)
-            name1 = raw_line.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
+            # 4. Final Naming Logic
+            name1 = raw_line.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").strip()
             
             if m.text:
                 if "youtu" in url:
