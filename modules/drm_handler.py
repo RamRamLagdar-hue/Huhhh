@@ -227,8 +227,15 @@ async def drm_handler(bot: Client, m: Message):
 
 #........................................................................................................................................................................................
     failed_count = 0
-    count =int(raw_text)    
+    count = int(raw_text)    
     arg = int(raw_text)
+    
+    # --- [NEW] Variables for Indexing (Loop ke bahar) ---
+    topic_links = {} 
+    current_sub = None
+    current_top = None
+    clean_cid = str(m.chat.id).replace("-100", "")
+
     try:
         for i in range(arg-1, len(links)):
             if globals.cancel_requested:
@@ -241,8 +248,36 @@ async def drm_handler(bot: Client, m: Message):
             url = "https://" + Vxy
             link0 = "https://" + Vxy
 #........................................................................................................................................................................................
-             
-            name1 = links[i][0].replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
+            
+            # --- [NEW] SMART DETECTION LOGIC START ---
+            raw_line = links[i][0]
+            
+            # [span_2](start_span)Subject Nikalna (Khan Sir/English/Reasoning patterns)[span_2](end_span)
+            sub_match = re.search(r"^[\[\(]([^\]\)]+)[\]\)]", raw_line)
+            sub_name = sub_match.group(1).split(" by ")[0].strip() if sub_match else "Other"
+            
+            # [span_3](start_span)Topic Detection (||, | or : patterns)[span_3](end_span)
+            top_match = re.search(r"\|\|?\s*([^:]+):?", raw_line)
+            if top_match:
+                top_raw = top_match.group(1).strip()
+                top_name = re.sub(r"(Lecture\s*\d+|Class\s*\d+|Part-\d+)", "", top_raw).strip()
+            else:
+                top_name = re.sub(r"^[\[\(].*?[\]\)]\s*|Class\s*\d+|[:\d/]", "", raw_line).strip()
+            
+            if not top_name or len(top_name) < 2: top_name = sub_name
+
+            # [span_4](start_span)Marker Link & Section Divider[span_4](end_span)
+            if topic == "/yes":
+                if sub_name != current_sub or top_name != current_top:
+                    current_sub, current_top = sub_name, top_name
+                    marker = await bot.send_message(channel_id, f"📌 **SECTION:** {current_sub}\n└─ **TOPIC:** {current_top}")
+                    if current_sub not in topic_links: topic_links[current_sub] = {}
+                    topic_links[current_sub][top_name] = f"https://t.me/c/{clean_cid}/{marker.id}"
+            # --- [NEW] SMART DETECTION LOGIC END ---
+
+            # -[span_5](start_span)-- PURANA NAME LOGIC (ALIGNED) ---[span_5](end_span)
+            name1 = raw_line.replace("(", "[").replace(")", "]").replace("_", "").replace("\t", "").replace(":", "").replace("/", "").replace("+", "").replace("#", "").replace("|", "").replace("@", "").replace("*", "").replace(".", "").replace("https", "").replace("http", "").strip()
+            
             if m.text:
                 if "youtu" in url:
                     oembed_url = f"https://www.youtube.com/oembed?url={url}&format=json"
@@ -253,35 +288,16 @@ async def drm_handler(bot: Client, m: Message):
                     namef = f'{audio_title[:60]}'
                 else:
                     name = f'{name1[:60]}'
-                    namef = f'{name1[:60]}'
+                    namef = f'{top_name[:60]}' 
             else:
-                if topic == "/yes":
-                    raw_title = links[i][0]
-                    t_match = re.search(r"[\(\[]([^\)\]]+)[\)\]]", raw_title)
-                    if t_match:
-                        t_name = t_match.group(1).strip()
-                        v_name = re.sub(r"^[\(\[][^\)\]]+[\)\]]\s*", "", raw_title)
-                        v_name = re.sub(r"[\(\[][^\)\]]+[\)\]]", "", v_name)
-                        v_name = re.sub(r":.*", "", v_name).strip()
-                    else:
-                        t_name = "Untitled"
-                        v_name = re.sub(r":.*", "", raw_title).strip()
-                    
-                    if endfilename == "/d":
-                        name = f'{str(count).zfill(3)}) {name1[:60]}'
-                        namef = f'{v_name}'
-                    else:
-                        name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
-                        namef = f'{v_name} {endfilename}'
+                if endfilename == "/d":
+                    name = f'{str(count).zfill(3)}) {name1[:60]}'
+                    namef = f'{top_name}'
                 else:
-                    if endfilename == "/d":
-                        name = f'{str(count).zfill(3)}) {name1[:60]}'
-                        namef = f'{name1[:60]}'
-                    else:
-                        name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
-                        namef = f'{name1[:60]} {endfilename}'
+                    name = f'{str(count).zfill(3)}) {name1[:60]} {endfilename}'
+                    namef = f'{top_name} {endfilename}'
                         
-#........................................................................................................................................................................................
+#..............................................................#..................................................................................................................................................................................................................................................................................................................
                         
             
                                                                                                                                                 # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
