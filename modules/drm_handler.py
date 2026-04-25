@@ -541,28 +541,30 @@ async def drm_handler(bot: Client, m: Message):
                         f"╰━✦𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ {CREDIT}"
 
                 # --- [NEW] CLOUDFRONT DRM BYPASS BLOCK ---
-                if "cloudfront.net" in url and "*" in url:
+                 if "cloudfront.net" in url and "*" in url:
                     try:
                         video_url, keys_string = url.split("*")
-                        # Saini.py helper ke liye key format: --key KID:KEY
                         formatted_key = f"--key {keys_string}"
+                        
+                        # YE LINE ADD KARO (Path define karne ke liye)
+                        path = f"./downloads/{m.chat.id}"
                         
                         prog = await bot.send_message(channel_id, Show, disable_web_page_preview=True)
                         prog1 = await m.reply_text(Show1, disable_web_page_preview=True)
                         
-                        # saini.py ka decrypt_and_merge_video function call ho raha hai
+                        # Ab 'path' variable mil jayega aur error nahi aayega
                         res_file = await helper.decrypt_and_merge_video(video_url, formatted_key, path, name, raw_text2)
                         
                         await prog1.delete(True)
                         await prog.delete(True)
-                        # Video bhejne ke liye saini.py ka function
                         await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
                         count += 1
-                        continue # Iske niche wale normal download logic ko skip karega
+                        continue 
                     except Exception as e:
                         await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
                         count += 1
                         continue
+
 #........................................................................................................................................................................................           
                 if "drive" in url:
                     try:
