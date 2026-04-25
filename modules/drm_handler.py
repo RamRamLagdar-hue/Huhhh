@@ -446,7 +446,7 @@ async def drm_handler(bot: Client, m: Message):
                #     await prog1.delete(True)
                     # send_vid function saini.py mein line 208 par hai
                #     await helper.send_vid(bot, m, cc, res_file, vidwatermark, thumb, name, prog, channel_id)
-                    count += 1
+                    #count += 1
              #   except Exception as e:
            #         await bot.send_message(channel_id, f"❌ DRM Error: {str(e)}")
           #          count += 1
