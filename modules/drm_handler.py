@@ -427,7 +427,9 @@ async def drm_handler(bot: Client, m: Message):
 
             # --- YE NAYI LINES ADD KARO ---
             elif "cloudfront.net" in url:
-                cmd = f'yt-dlp -o "{name}.mp4" --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
+                # --remux-video mp4 use karo taaki extension hamesha fix rahe
+                cmd = f'yt-dlp -o "{name}.mp4" --remux-video mp4 --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
+                filename = f"{name}.mp4
 
 
             else:
