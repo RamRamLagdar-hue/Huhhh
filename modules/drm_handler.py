@@ -427,12 +427,7 @@ async def drm_handler(bot: Client, m: Message):
 
             # --- YE NAYI LINES ADD KARO ---
             elif "cloudfront.net" in url:
-                # Naming check
-                final_name = name1 if name1 else "Reasoning_Batch"
-                save_name = f"{str(count).zfill(3)}_{final_name}_GAMER"
-                
-                # Sabse important: Referer ko exact playlist level tak le jao
-                # Aur aria2c ko single call mein limit karo
+                # Isme headers ko direct URL se pehle dalo
                 headers = (
                     '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" '
                     '--referer "https://d3vlg4qjb80h8n.cloudfront.net/" '
@@ -440,10 +435,10 @@ async def drm_handler(bot: Client, m: Message):
                     '--no-check-certificate'
                 )
                 
-                # Command ko clean kiya hai taaki doubling na ho
-                cmd = f'yt-dlp {headers} -o "{save_name}.mp4" --remux-video mp4 --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
-                
-                filename = f"{save_name}.mp4"
+                # --allow-unplayable-formats add kiya hai taaki DRM issues bypass ho sakein
+                cmd = f'yt-dlp {headers} --allow-unplayable-formats -f "best" -o "{name}.mp4" --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -j 16 -s 16" "{url}"'
+                filename = f"{name}.mp4"
+
 
 
             else:
