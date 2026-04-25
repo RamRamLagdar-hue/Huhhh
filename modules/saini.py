@@ -25,12 +25,28 @@ from base64 import b64decode
 def install_mp4decrypt():
     if not os.path.exists("mp4decrypt"):
         print("陶 Installing mp4decrypt binaries...")
-        # GitHub se direct binary uthane ke liye
-        os.system("wget https://github.com/SainiSevak/bento4-buildpack/raw/master/bin/mp4decrypt -O mp4decrypt")
+        # Official Bento4 Static Binary for Linux
+        # Ye link direct zip se hai jo stable hai
+        zip_url = "https://www.bok.net/Bento4/binaries/Bento4-SDK-1-6-0-641.x86_64-unknown-linux.zip"
+        
+        # 1. Zip download karo
+        os.system(f"wget -q {zip_url} -O bento4.zip")
+        
+        # 2. Sirf mp4decrypt ko nikaalo
+        # Bento4 zip mein binaries 'bin' folder ke andar hoti hain
+        os.system("unzip -j bento4.zip Bento4-SDK-1-6-0-641.x86_64-unknown-linux/bin/mp4decrypt -d .")
+        
+        # 3. Cleanup aur Permissions
         os.system("chmod +x mp4decrypt")
+        if os.path.exists("bento4.zip"):
+            os.remove("bento4.zip")
+            
+        if os.path.exists("mp4decrypt"):
+            print("趾 mp4decrypt setup complete and verified!")
+        else:
+            print("❌ Installation failed. Please check network.")
 
 install_mp4decrypt()
-
 # Global counter for failed attempts
 failed_counter = 0
 
