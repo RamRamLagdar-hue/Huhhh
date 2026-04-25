@@ -285,8 +285,42 @@ async def drm_handler(bot: Client, m: Message):
                         
             
                                                                         # --- DIRECT PDF DOWNLOAD LOGIC (NO HELPER NEEDED) ---
-            if ".pdf*" in url:
-                url = f"https://dragoapi.vercel.app/pdf/{url}"
+                            elif "pdf" in url:
+                    if "cwmediabkt99" in url:
+                        max_retries = 5 
+                        retry_delay = 3 
+                        success = False 
+                        
+                        # Ye headers 403 Forbidden error bypass karne ke liye hain
+                        headers = {
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                            "Referer": "https://www.careerwill.com/",
+                            "Origin": "https://www.careerwill.com/",
+                            "Accept": "*/*"
+                        }
+
+                        for attempt in range(max_retries):
+                            try:
+                                url = url.replace(" ", "%20")
+                                response = requests.get(url, headers=headers, timeout=30)
+
+                                if response.status_code == 200:
+                                    file_path = f"{namef}.pdf"
+                                    with open(file_path, 'wb') as file:
+                                        file.write(response.content)
+                                    
+                                    await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
+                                    count += 1
+                                    os.remove(file_path)
+                                    success = True
+                                    break 
+                                else:
+                                    await asyncio.sleep(retry_delay)
+                                    
+                            except Exception:
+                                await asyncio.sleep(retry_delay)
+                                continue 
+
             # ----------------------------------------------------
 
 
