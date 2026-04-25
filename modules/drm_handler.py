@@ -284,60 +284,49 @@ async def drm_handler(bot: Client, m: Message):
 #........................................................................................................................................................................................
                         
             
-                                                                        # --- DIRECT PDF DOWNLOAD LOGIC (NO HELPER NEEDED) ---
-                            elif "pdf" in url:
-                    if "cwmediabkt99" in url:
-                        max_retries = 5 
-                        retry_delay = 3 
-                        success = False 
-                        
-                        # Ye headers 403 Forbidden error bypass karne ke liye hain
-                        headers = {
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                            "Referer": "https://www.careerwill.com/",
-                            "Origin": "https://www.careerwill.com/",
-                            "Accept": "*/*"
-                        }
+                                                                                    # --- DIRECT PDF DOWNLOAD LOGIC ---
+            if ".pdf*" in url:
+                url = f"https://dragoapi.vercel.app/pdf/{url}"
 
-                        for attempt in range(max_retries):
-                            try:
-                                url = url.replace(" ", "%20")
-                                response = requests.get(url, headers=headers, timeout=30)
+            elif "pdf" in url:
+                if "cwmediabkt99" in url:
+                    max_retries = 5 
+                    retry_delay = 3 
+                    success = False 
+                    
+                    # Headers for bypassing 403 Forbidden
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                        "Referer": "https://www.careerwill.com/",
+                        "Origin": "https://www.careerwill.com/",
+                        "Accept": "*/*"
+                    }
 
-                                if response.status_code == 200:
-                                    file_path = f"{namef}.pdf"
-                                    with open(file_path, 'wb') as file:
-                                        file.write(response.content)
-                                    
-                                    await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
-                                    count += 1
-                                    os.remove(file_path)
-                                    success = True
-                                    break 
-                                else:
-                                    await asyncio.sleep(retry_delay)
-                                    
-                            except Exception:
+                    for attempt in range(max_retries):
+                        try:
+                            url = url.replace(" ", "%20")
+                            response = requests.get(url, headers=headers, timeout=30)
+
+                            if response.status_code == 200:
+                                file_path = f"{namef}.pdf"
+                                with open(file_path, 'wb') as file:
+                                    file.write(response.content)
+                                
+                                await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
+                                count += 1
+                                os.remove(file_path)
+                                success = True
+                                break 
+                            else:
                                 await asyncio.sleep(retry_delay)
-                                continue 
+                                
+                        except Exception:
+                            await asyncio.sleep(retry_delay)
+                            continue
 
-            # ----------------------------------------------------
-
-
-
-
-
-       
-            # ------------------------------------
-
-
-                
-            # ... [Previous setup code] ...
+            # Baaki code yahan se...
             if "visionias" in url:
-                async with ClientSession() as session:
-                    async with session.get(url, headers={'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9', 'Accept-Language': 'en-US,en;q=0.9', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', 'Pragma': 'no-cache', 'Referer': 'http://www.visionias.in/', 'Sec-Fetch-Dest': 'iframe', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Site': 'cross-site', 'Upgrade-Insecure-Requests': '1', 'User-Agent': 'Mozilla/5.0 (Linux; Android 12; RMX2121) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36', 'sec-ch-ua': '"Chromium";v="107", "Not=A?Brand";v="24"', 'sec-ch-ua-mobile': '?1', 'sec-ch-ua-platform': '"Android"',}) as resp:
-                        text = await resp.text()
-                        url = re.search(r"(https://.*?playlist.m3u8.*?)\"", text).group(1)
+                # ... visionias wala logic ...
 
             if "acecwply" in url:
                 cmd = f'yt-dlp -o "{name}.%(ext)s" -f "bestvideo[height<={raw_text2}]+bestaudio" --hls-prefer-ffmpeg --no-keep-video --remux-video mkv --no-warning "{url}"'
