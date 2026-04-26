@@ -284,8 +284,8 @@ async def drm_handler(bot: Client, m: Message):
 #..............................................................#..................................................................................................................................................................................................................................................................................................................
                         
             
-                                                                                                                                                # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
-            elif "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
+            # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
+            if "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
                 # Pehle URL format sahi karo agar zarurat hai
                 if not url.startswith("https://dragoapi"):
                     url = f"https://dragoapi.vercel.app/pdf/{url}"
