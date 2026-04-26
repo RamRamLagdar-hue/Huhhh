@@ -420,10 +420,11 @@ async def drm_handler(bot: Client, m: Message):
 
             # --- APPX & CLASSX VIDEO SERVER BYPASS (FIXED) ---
             elif "appx" in url and ".mp4" in url:
-                # Direct Appx MP4 links ke liye headers setup taaki download fail na ho
-                headers = '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"'
+                # User-Agent ko thoda update kiya hai aur URL ko quotes mein dala hai
+                headers = '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" --referer "https://web.appx.co.in/"'
+                # Yahan "{url}" ko double quotes mein hona zaroori hai
                 cmd = f'yt-dlp {headers} -o "{name}.mp4" --external-downloader aria2c --external-downloader-args "aria2c:-x 16 -s 16 -k 1M" "{url}"'
-
+                
             elif "https://static-trans-v1.classx.co.in" in url or "https://static-trans-v2.classx.co.in" in url:
                 base_with_params, signature = url.split("*")
                 base_clean = base_with_params.split(".mkv")[0] + ".mkv"
