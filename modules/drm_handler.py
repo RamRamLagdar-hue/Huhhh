@@ -285,10 +285,10 @@ async def drm_handler(bot: Client, m: Message):
                         
             
                                                                                                                                                 # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
-            if ".pdf*" in url:
+            elif "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
                 url = f"https://dragoapi.vercel.app/pdf/{url}"
 
-            elif "pdf" in url and not ("appx" in url and ".mp4" in url):
+            elif "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
                 try:
                     # Ankit bhai ka smart button logic for problematic links
                     if "cwmediabkt99" in url or "utkarshapp" in url:
