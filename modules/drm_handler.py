@@ -286,9 +286,10 @@ async def drm_handler(bot: Client, m: Message):
             
                                                                                                                                                 # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
             elif "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
-                url = f"https://dragoapi.vercel.app/pdf/{url}"
-
-            elif "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
+                # Pehle URL format sahi karo agar zarurat hai
+                if not url.startswith("https://dragoapi"):
+                    url = f"https://dragoapi.vercel.app/pdf/{url}"
+                
                 try:
                     # Ankit bhai ka smart button logic for problematic links
                     if "cwmediabkt99" in url or "utkarshapp" in url:
@@ -298,34 +299,31 @@ async def drm_handler(bot: Client, m: Message):
                         
                         await bot.send_message(
                             chat_id=channel_id,
-                            text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo Download jab pdh rhe ho uske sath krna.</blockquote>",
+                            text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo.</blockquote>",
                             reply_markup=button
                         )
-                        # Flood control gap
                         await asyncio.sleep(3) 
                         count += 1
                         continue 
 
                     else:
-                        # Baaki normal PDF ke liye logic
+                        # Baaki normal PDF ke liye download logic
                         cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
                         os.system(f"{cmd} -R 25 --fragment-retries 25")
                         if os.path.exists(f'{namef}.pdf'):
                             await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
                             os.remove(f'{namef}.pdf')
-                            # File bhejne ke baad delay zaroori hai
                             await asyncio.sleep(3) 
                         count += 1
 
                 except FloodWait as e:
-                    # Agar Telegram roke, toh jitna bola hai utna ruk jao
                     print(f"FloodWait: Sleeping for {e.value} seconds")
                     await asyncio.sleep(e.value)
-                    # Dubara wahi step try karne ke liye continue na karke loop repeat hoga
                     continue 
                 except Exception:
                     count += 1
-                    pass
+                    pass 
+
             # ----------------------------------------------------
 
 
