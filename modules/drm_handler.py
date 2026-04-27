@@ -285,7 +285,7 @@ async def drm_handler(bot: Client, m: Message):
                         
             
             # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
-                    elif "pdf" in url:
+                elif "pdf" in url:
                     # 1. Setup Download URL (Bypass DragoAPI for specific domains)
                     if "hranker.com" in url or "selectionway" in url:
                         pdf_download_url = url
