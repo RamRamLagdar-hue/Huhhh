@@ -286,44 +286,55 @@ async def drm_handler(bot: Client, m: Message):
             
             # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
             if "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
-                # Pehle URL format sahi karo agar zarurat hai
-                if not url.startswith("https://dragoapi"):
-                    url = f"https://dragoapi.vercel.app/pdf/{url}"
+                # 1. URL Cleanup
+                if "dragoapi" not in url:
+                    pdf_download_url = f"https://dragoapi.vercel.app/pdf/{url}"
+                else:
+                    pdf_download_url = url
                 
                 try:
-                    # Ankit bhai ka smart button logic for problematic links
+                    # 2. Smart Button Logic (For specific problematic domains)
                     if "cwmediabkt99" in url or "utkarshapp" in url:
                         button = InlineKeyboardMarkup([
-                            [InlineKeyboardButton("📥 Download PDF (Chrome)", url=url)]
+                            [InlineKeyboardButton("📥 Download PDF (Chrome)", url=pdf_download_url)]
                         ])
-                        
                         await bot.send_message(
                             chat_id=channel_id,
-                            text=f"📄 **PDF Ready for Manual Download**\n\n**Name:** `{namef}`\n\n<blockquote>yeh link bot se download nahi ho rahi thi, isliye button de diya hai. Ispe click karke Chrome se download kar lo.</blockquote>",
+                            text=f"📄 **Manual Download Required**\n\n**Name:** `{namef}`\n\n<blockquote>Yeh link bot se block hai, button use karein.</blockquote>",
                             reply_markup=button
                         )
-                        await asyncio.sleep(3) 
                         count += 1
                         continue 
 
+                    # 3. Normal Download (For SelectionWay/HRanker etc.)
                     else:
-                        # Baaki normal PDF ke liye download logic
-                        cmd = f'yt-dlp -o "{namef}.pdf" "{url}"'
-                        os.system(f"{cmd} -R 25 --fragment-retries 25")
-                        if os.path.exists(f'{namef}.pdf'):
-                            await bot.send_document(chat_id=channel_id, document=f'{namef}.pdf', caption=cc1)
-                            os.remove(f'{namef}.pdf')
-                            await asyncio.sleep(3) 
-                        count += 1
+                        # yt-dlp ki jagah direct requests use karna zyada safe hai small PDFs ke liye
+                        response = requests.get(pdf_download_url, timeout=30)
+                        if response.status_code == 200:
+                            file_path = f"{namef}.pdf"
+                            with open(file_path, "wb") as f:
+                                f.write(response.content)
+                            
+                            await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
+                            os.remove(file_path)
+                            count += 1
+                            continue
+                        else:
+                            # Agar direct download fail ho toh yt-dlp fallback
+                            os.system(f'yt-dlp -o "{namef}.pdf" "{pdf_download_url}"')
+                            if os.path.exists(f"{namef}.pdf"):
+                                await bot.send_document(chat_id=channel_id, document=f"{namef}.pdf", caption=cc1)
+                                os.remove(f"{namef}.pdf")
+                                count += 1
+                                continue
+                            else:
+                                raise Exception(f"Download failed with status {response.status_code}")
 
-                except FloodWait as e:
-                    print(f"FloodWait: Sleeping for {e.value} seconds")
-                    await asyncio.sleep(e.value)
-                    continue 
-                except Exception:
+                except Exception as e:
+                    await bot.send_message(channel_id, f"❌ PDF Error: {str(e)}")
                     count += 1
-                    pass 
-
+                    failed_count += 1
+                    continue
             # ----------------------------------------------------
 
 
