@@ -285,52 +285,47 @@ async def drm_handler(bot: Client, m: Message):
                         
             
             # --- DIRECT PDF DOWNLOAD LOGIC (WITH BUTTON JUGAAD) ---
-            if "pdf" in url and not ("appx" in url or "classx" in url or "static-" in url):
-                # 1. Agar link SelectionWay ya HRanker ki hai, toh API use MAT karo
-                if "hranker.com" in url or "selectionway" in url:
-                    pdf_download_url = url # Direct original link use karo
-                elif "dragoapi" not in url:
-                    pdf_download_url = f"https://dragoapi.vercel.app/pdf/{url}"
-                else:
-                    pdf_download_url = url
-                
-                try:
-                    # 2. Button Logic (Fixed for specific domains)
-                    if any(x in url for x in ["cwmediabkt99", "utkarshapp"]):
-                        button = InlineKeyboardMarkup([[InlineKeyboardButton("📥 Download PDF (Chrome)", url=pdf_download_url)]])
-                        await bot.send_message(chat_id=channel_id, text=f"📄 **Manual Download Required**\n\n**Name:** `{namef}`", reply_markup=button)
-                        count += 1
-                        continue 
-
-                    # 3. Direct Download with Headers (API Bypass)
-                    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
-                    response = requests.get(pdf_download_url, headers=headers, timeout=60, verify=False)
-                    
-                    if response.status_code == 200:
-                        file_path = f"{namef}.pdf"
-                        with open(file_path, "wb") as f:
-                            f.write(response.content)
-                        
-                        await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
-                        os.remove(file_path)
-                        count += 1
-                        continue
+                    elif "pdf" in url:
+                    # 1. Setup Download URL (Bypass DragoAPI for specific domains)
+                    if "hranker.com" in url or "selectionway" in url:
+                        pdf_download_url = url
+                    elif "dragoapi" not in url:
+                        pdf_download_url = f"https://dragoapi.vercel.app/pdf/{url}"
                     else:
-                        # Agar direct fail ho, tabhi yt-dlp try karo (Last Resort)
-                        os.system(f'yt-dlp -o "{namef}.pdf" "{pdf_download_url}"')
-                        if os.path.exists(f"{namef}.pdf"):
+                        pdf_download_url = url
+
+                    try:
+                        # 2. Smart Button Logic (Bkt99/Utkarsh ke liye Chrome button)
+                        if any(x in url for x in ["cwmediabkt99", "utkarshapp"]):
+                            button = InlineKeyboardMarkup([[InlineKeyboardButton("📥 Download PDF (Chrome)", url=pdf_download_url)]])
+                            await bot.send_message(chat_id=channel_id, text=f"📄 **Manual Download**\n\n**Name:** `{namef}`", reply_markup=button)
+                            count += 1
+                            continue 
+
+                        # 3. Direct Download Logic (Safe for SelectionWay)
+                        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'}
+                        response = requests.get(pdf_download_url, headers=headers, timeout=60, verify=False)
+                        
+                        if response.status_code == 200:
+                            file_path = f"{namef}.pdf"
+                            with open(file_path, "wb") as f:
+                                f.write(response.content)
+                            
+                            await bot.send_document(chat_id=channel_id, document=file_path, caption=cc1)
+                            os.remove(file_path)
+                            count += 1
+                        else:
+                            # Fallback to yt-dlp if direct download fails
+                            os.system(f'yt-dlp -o "{namef}.pdf" "{pdf_download_url}"')
                             await bot.send_document(chat_id=channel_id, document=f"{namef}.pdf", caption=cc1)
                             os.remove(f"{namef}.pdf")
                             count += 1
-                            continue
-                        else:
-                            raise Exception(f"Server error: {response.status_code}")
+                    except Exception as e:
+                        await bot.send_message(channel_id, f"❌ PDF Error: {str(e)}")
+                        count += 1
+                        failed_count += 1
+                        continue
 
-                except Exception as e:
-                    await bot.send_message(channel_id, f"❌ PDF Error: {str(e)}\nLink is currently unreachable.")
-                    count += 1
-                    failed_count += 1
-                    continue
             # ----------------------------------------------------
 
 
